@@ -1,19 +1,44 @@
 - hosts: localhost
   become: true
+  environment:
+    ASDF_DIR: ~/.asdf
   tasks:
   - name: Install zsh
     apt: name=zsh
+
   - name: Change shell
     shell: chsh -s `which zsh`
+
   - name: Install ohmyzsh
     shell: sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+
   - name: Install zsh plugin autosuggestions
     ansible.builtin.git:
       repo: "https://github.com/zsh-users/zsh-autosuggestions"
       dest: "~/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+
   - name: Update our zshrc
     lineinfile:
       path: "~/.zshrc"
       regexp: '^\s*plugins=\((.*)(git)(.*\))'
       line: 'plugins=(\1git zsh-autosuggestions\3'
       backrefs: yes
+
+  - name: Install mise
+    shell: curl https://mise.run | sh
+
+  - name: Add mise activation to zshrc
+    lineinfile:
+      path: ~/.zshrc
+      line: 'eval "$(/root/.local/bin/mise activate zsh)"'
+      create: yes
+      state: present
+
+  - name: Install nodejs
+    shell: |
+      source /root/.local/bin/mise activate zsh
+      mise use -g node@latest
+    args:
+      executable: /bin/zsh
+    environment:
+      PATH: "/root/.local/bin:{{ ansible_env.PATH }}"
