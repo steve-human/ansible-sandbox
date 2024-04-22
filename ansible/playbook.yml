@@ -1,0 +1,19 @@
+- hosts: localhost
+  become: true
+  tasks:
+  - name: Install zsh
+    apt: name=zsh
+  - name: Change shell
+    shell: chsh -s `which zsh`
+  - name: Install ohmyzsh
+    shell: sh -c "$(curl -fsSL https://raw.githubusercontent.com/ohmyzsh/ohmyzsh/master/tools/install.sh)"
+  - name: Install zsh plugin autosuggestions
+    ansible.builtin.git:
+      repo: "https://github.com/zsh-users/zsh-autosuggestions"
+      dest: "~/.oh-my-zsh/custom/plugins/zsh-autosuggestions"
+  - name: Update our zshrc
+    lineinfile:
+      path: "~/.zshrc"
+      regexp: '^\s*plugins=\((.*)(git)(.*\))'
+      line: 'plugins=(\1git zsh-autosuggestions\3'
+      backrefs: yes
